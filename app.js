@@ -3,10 +3,11 @@ const http = require('http');
 const qrcode = require('qrcode');
 const express = require('express');
 const socket = require('socket.io');
-const { Client } = require('whatsapp-web.js');
+const { Client, MessageMedia } = require('whatsapp-web.js');
 const { body, validationResult } = require('express-validator');
 const { phoneNumberFormatter } = require('./Helpers/formatter');
-
+const fileUpload = require('express-fileupload');
+const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +15,9 @@ const io = socket(server);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload({
+  debug: true
+}));
 
 // Path where the session data will be stored
 const SESSION_FILE_PATH = './session.json';
@@ -70,6 +74,7 @@ io.on('connection', socket => {
   client.on('ready', () => {
     socket.emit('message', 'Client is ready!');
     socket.emit('ready', 'Client is ready!');
+    console.log('Client is ready!');
   });
 
   // Save session values to the file upon successful auth
@@ -117,6 +122,37 @@ app.post('/send-message', [
      }
 
     client.sendMessage(number, message).then(response => {
+        res.status(200).json({
+           status: true,
+           response: response
+        });
+    }).catch(err => {
+        res.status(500).json({
+           status: false,
+           response: err
+        });
+    });
+});
+
+app.post('/send-media', async (req, res) => {
+    const number = phoneNumberFormatter(req.body.number);
+    const caption = req.body.caption;
+
+    // 1.static file
+    // const media = MessageMedia.fromFilePath('./img.jpg');
+    // 2.upload file
+    // const file = req.files.file;
+    // const media = new MessageMedia(file.mimetype, file.data.toString('base64'), file.name)
+    // 3.axios
+    const fileUrl = req.body.file;
+    let mimetype;
+    const attch = await axios.get(fileUrl, {responseType: 'arraybuffer'}).then(res => {
+      mimetype = res.headers['content-type'];
+      return res.data.toString('base64');
+    });
+    const media = new MessageMedia(mimetype, attch, 'Media')
+
+    client.sendMessage(number, media, { caption: caption }).then(response => {
         res.status(200).json({
            status: true,
            response: response
