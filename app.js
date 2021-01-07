@@ -1,9 +1,12 @@
 const fs = require('fs');
-const qrcode = require('qrcode');
-const socket = require('socket.io');
-const express = require('express');
 const http = require('http');
+const qrcode = require('qrcode');
+const express = require('express');
+const socket = require('socket.io');
 const { Client } = require('whatsapp-web.js');
+const { body, validationResult } = require('express-validator');
+const { phoneNumberFormatter } = require('./Helpers/formatter');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -23,7 +26,21 @@ if(fs.existsSync(SESSION_FILE_PATH)) {
 
 // Use the saved values
 const client = new Client({
-    session: sessionData
+  restartOnAuthFail: true,
+  puppeteer: {
+    headless: true,
+    args: [ // configure make hemat ram
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process', // <- this one doesn't works in Windows
+      '--disable-gpu'
+    ],
+  },
+  session: sessionData
 });
 
 app.get('/', (req, res) => {
@@ -67,21 +84,49 @@ io.on('connection', socket => {
   });
 });
 
-app.post('/send-message', (req, res) => {
-  const number = req.body.number;
-  const message = req.body.message;
+const checkRegisteredNumber = async function(number) {
+    const isRegistered = await client.isRegisteredUser(number);
+    return isRegistered;
+}
 
-   client.sendMessage(number, message).then(response => {
-     res.status(200).json({
-         status: true,
-         response: response
-     });
-   }).catch(err => {
-     res.status(500).json({
+app.post('/send-message', [
+    body('number').notEmpty(),
+    body('message').notEmpty()
+], async (req, res) => {
+    const errors = validationResult(req).formatWith(({msg}) => {
+        return msg;
+    });
+
+    if (!errors.isEmpty()) {
+      return res.status(422).json({
+        status: false,
+        response: errors.mapped()
+      });
+    }
+
+    const number = phoneNumberFormatter(req.body.number);
+    const message = req.body.message;
+
+    // check register or no
+    const isRegisteredNumber = await checkRegisteredNumber(number);
+     if (!isRegisteredNumber) {
+       return res.status(422).json({
          status: false,
-         response: err
-     });
-   });
+         response: 'The number is not registered'
+       });
+     }
+
+    client.sendMessage(number, message).then(response => {
+        res.status(200).json({
+           status: true,
+           response: response
+        });
+    }).catch(err => {
+        res.status(500).json({
+           status: false,
+           response: err
+        });
+    });
 });
 
 server.listen(8000, () => {
