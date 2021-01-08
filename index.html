@@ -8,6 +8,30 @@
     <div id="app">
       <h1>Whatsapp API</h1>
       <img src="" alt="QR Code" id="qrcode">
+
+      <div id="use" hidden>
+        <h3>Use</h3>
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>URL</th>
+              <th>Requirements</th>
+            </tr>
+          </thead>
+          <tbody>
+            <td>POST</td>
+            <td>URL/send-message</td>
+            <td>
+              <ul>
+                <li>number (087xxx)</li>
+                <li>message (ini pesan)</li>
+              </ul>
+            </td>
+          </tbody>
+        </table>
+      </div>
+
       <h3>Logs:</h3>
       <ul class="logs"></ul>
     </div>
@@ -26,12 +50,14 @@
           $('#qrcode').attr('src', url);
         });
 
-        socket.on('ready', url => {
+        socket.on('ready', () => {
           $('#qrcode').hide();
+          $('#use').removeAttr('hidden');
         });
 
-        socket.on('authenticated', url => {
+        socket.on('authenticated', () => {
           $('#qrcode').hide();
+          $('#use').removeAttr('hidden');
         });
       });
     </script>

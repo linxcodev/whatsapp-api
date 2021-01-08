@@ -54,7 +54,7 @@ app.get('/', (req, res) => {
 
 client.on('message', msg => {
     if (msg.body == '!ping') {
-        msg.reply('Helo Shofii :v ini kukirim dengan bot');
+        msg.reply('!pong');
     }
 });
 
@@ -73,9 +73,9 @@ io.on('connection', socket => {
   });
 
   client.on('ready', () => {
-    socket.emit('message', 'Client is ready!');
-    socket.emit('ready', 'Client is ready!');
-    console.log('Client is ready!');
+    socket.emit('message', 'Whatsapp API is ready!');
+    socket.emit('ready', 'Whatsapp API is ready!');
+    console.log('Whatsapp API is ready!');
   });
 
   // Save session values to the file upon successful auth
