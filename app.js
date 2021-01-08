@@ -12,6 +12,7 @@ const axios = require('axios');
 const app = express();
 const server = http.createServer(app);
 const io = socket(server);
+const port = process.env.PORT || 8000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -165,6 +166,6 @@ app.post('/send-media', async (req, res) => {
     });
 });
 
-server.listen(8000, () => {
-  console.log('App Running on port 8000');
+server.listen(port, () => {
+  console.log('App Running on port ' + port);
 });
