@@ -21,7 +21,7 @@ app.use(fileUpload({
 }));
 
 // Path where the session data will be stored
-const SESSION_FILE_PATH = './session.json';
+const SESSION_FILE_PATH = './sessions/session.json';
 
 // Load the session data if it has been previously saved
 let sessionData;
