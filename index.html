@@ -77,7 +77,7 @@
       // ketika button tambah di klik
       $('.add-client-btn').click(() => {
         const clientId = $('#client-id').val();
-        const clientDescription = $('#client-Description').val();
+        const clientDescription = $('#client-description').val();
         const tempalte = $('.client').first().clone().removeClass('hide').addClass(clientId);
 
         tempalte.find('.title').html(clientId);
@@ -92,6 +92,31 @@
 
       socket.on('message', data => {
         $(`.client.${data.id} .logs`).append($('<li>').text(data.text));
+      });
+
+      socket.on('init', data => {
+        $('.client-container .client').not(':first').remove();
+
+        data.map(session => {
+          const clientId = session.id;
+          const clientDescription = session.description;
+          const tempalte = $('.client').first().clone().removeClass('hide').addClass(clientId);
+
+          tempalte.find('.title').html(clientId);
+          tempalte.find('.description').html(clientDescription);
+
+          $('.client-container').append(tempalte);
+
+          if (session.ready) {
+            $(`.client.${session.id} .logs`).append($('<li>').text('Whatsapp API is ready!'));
+          } else {
+            $(`.client.${session.id} .logs`).append($('<li>').text('Connecting...'));
+          }
+        });
+      });
+
+      socket.on('remove-session', id => {
+        $(`.client.${id}`).remove();
       });
 
       socket.on('qr', data => {

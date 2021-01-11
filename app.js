@@ -6,7 +6,7 @@ const socket = require('socket.io');
 const { Client, MessageMedia } = require('whatsapp-web.js');
 const { body, validationResult } = require('express-validator');
 const { phoneNumberFormatter } = require('./Helpers/formatter');
-const fileUpload = require('express-fileupload');
+const fileUpload = require('express-fileupload'); // can handle form-data postman
 const axios = require('axios');
 
 const app = express();
