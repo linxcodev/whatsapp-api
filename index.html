@@ -1,137 +1,48 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html>
 
 <head>
-  <meta charset="utf-8">
-  <title>Whatsapp Api</title>
-  <style>
-    .client {
-      border: 1px solid #ccc;
-      padding: 20px;
-      box-sizing: border-box;
-      display: inline-block;
-      margin: 5px;
-    }
-    .hide {
-      display: none;
-    }
-  </style>
+	<title>Whatsapp API by Ngekoding</title>
 </head>
 
 <body>
-  <div id="app">
-    <h1>Whatsapp API</h1>
-    <div class="form-container">
-      <label for="client-id">ID</label><br>
-      <input type="text" id="client-id" placeholder="Masukkan ID..">
-      <br><br>
-      <label for="client-description">Description</label><br>
-      <textarea rows="3" id="client-description" placeholder="Masukkan Description.."></textarea>
-      <br><br>
-      <button class="add-client-btn">Tambah Client</button>
-    </div>
-    <hr>
 
-    <table border="1" class="hide">
-      <thead>
-        <tr>
-          <th>Method</th>
-          <th>URL</th>
-          <th>Requirements</th>
-        </tr>
-      </thead>
-      <tbody>
-        <td>POST</td>
-        <td>URL/send-message</td>
-        <td>
-          <ul>
-            <li>number (087xxx)</li>
-            <li>message (ini pesan)</li>
-          </ul>
-        </td>
-      </tbody>
-    </table>
+	<div id="app">
+		<h1>Whatsapp API</h1>
+		<p>Powered by Ngekoding</p>
+		<img src="" alt="QR Code" id="qrcode">
+		<h3>Logs:</h3>
+		<ul class="logs"></ul>
+	</div>
 
-    <div class="client-container">
-      <div class="client hide">
-        <h3 class="title"></h3>
-        <p class="description"></p>
-        <img src="" alt="QR Code" id="qrcode">
-        <h3>Logs:</h3>
-        <ul class="logs"></ul>
-      </div>
-    </div>
-  </div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+		integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg=="
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"
+		integrity="sha512-/WwtKR6NnHomLo0O4w9QKc1INTPEJs7ko6u2aBTA1paPldhPl8LtXsi7a35iEZ69+9P5dcgVNESG8hrP4Y2t3w=="
+		crossorigin="anonymous"></script>
+	<script>
+		$(document).ready(function () {
+			var socket = io();
 
+			socket.on('message', function (msg) {
+				$('.logs').append($('<li>').text(msg));
+			});
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
-    integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg=="
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"
-    integrity="sha512-L9L4VhE0D58fCxtJiYDHbIzSVfNGY24rhQPWTZPschTVKLpucPsLeT0FSjfnylLYARalTQqgwXsjjhi+wUTwIw=="
-    crossorigin="anonymous"></script>
-  <script type="text/javascript">
-    $(document).ready(() => {
-      const socket = io.connect();
+			socket.on('qr', function (src) {
+				$('#qrcode').attr('src', src);
+				$('#qrcode').show();
+			});
 
-      // ketika button tambah di klik
-      $('.add-client-btn').click(() => {
-        const clientId = $('#client-id').val();
-        const clientDescription = $('#client-description').val();
-        const tempalte = $('.client').first().clone().removeClass('hide').addClass(clientId);
+			socket.on('ready', function (data) {
+				$('#qrcode').hide();
+			});
 
-        tempalte.find('.title').html(clientId);
-        tempalte.find('.description').html(clientDescription);
-
-        $('.client-container').append(tempalte);
-        socket.emit('create-session', {
-          id: clientId,
-          description: clientDescription
-        });
-      });
-
-      socket.on('message', data => {
-        $(`.client.${data.id} .logs`).append($('<li>').text(data.text));
-      });
-
-      socket.on('init', data => {
-        $('.client-container .client').not(':first').remove();
-
-        data.map(session => {
-          const clientId = session.id;
-          const clientDescription = session.description;
-          const tempalte = $('.client').first().clone().removeClass('hide').addClass(clientId);
-
-          tempalte.find('.title').html(clientId);
-          tempalte.find('.description').html(clientDescription);
-
-          $('.client-container').append(tempalte);
-
-          if (session.ready) {
-            $(`.client.${session.id} .logs`).append($('<li>').text('Whatsapp API is ready!'));
-          } else {
-            $(`.client.${session.id} .logs`).append($('<li>').text('Connecting...'));
-          }
-        });
-      });
-
-      socket.on('remove-session', id => {
-        $(`.client.${id}`).remove();
-      });
-
-      socket.on('qr', data => {
-        $(`.client.${data.id} #qrcode`).attr('src', data.url);
-      });
-
-      socket.on('ready', data => {
-        $(`.client.${data.id} #qrcode`).hide();
-      });
-
-      socket.on('authenticated', data => {
-        $(`.client.${data.id} #qrcode`).hide();
-      });
-    });
-  </script>
+			socket.on('authenticated', function (data) {
+				$('#qrcode').hide();
+			});
+		});
+	</script>
 </body>
 
 </html>
