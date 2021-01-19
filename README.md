@@ -1,6 +1,12 @@
 ## API Whatsapp
 Using pupeteer and node js 10+
 
+## Demo
+Only Single device and not chace
+```
+https://linxcodev-wa.herokuapp.com/
+```
+
 Run
 ```
 node app.js
